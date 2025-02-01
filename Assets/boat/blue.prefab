@@ -123,14 +123,14 @@ MonoBehaviour:
   numberOfRays: 10
   angleSpread: 30
   rayDistance: 300
-  targetColliders:
-  - {fileID: 3615137278154281272, guid: d505a1baae0edff43b5f134eea3cec98, type: 3}
-  - {fileID: 3602910415921789812, guid: 3b7e6dd4354ca7f4b93834010ef63114, type: 3}
-  - {fileID: 9221856350812747571, guid: 81d9ad1013d7c8f48acb7704f420881e, type: 3}
-  yieldSpeed: 10
-  steeringSensitivity: 5.56
-  rotationSpeed: 5
+  allowedPrefabs:
+  - {fileID: 1622200086973145687, guid: d505a1baae0edff43b5f134eea3cec98, type: 3}
+  - {fileID: 3261865299594382580, guid: 3b7e6dd4354ca7f4b93834010ef63114, type: 3}
+  - {fileID: 4545521460984330786, guid: 81d9ad1013d7c8f48acb7704f420881e, type: 3}
   forwardSpeed: 5
+  maxSteeringAngle: 45
+  steeringChangeSpeed: 90
+  steeringReturnSpeed: 60
 --- !u!114 &7659495957058639217
 MonoBehaviour:
   m_ObjectHideFlags: 0

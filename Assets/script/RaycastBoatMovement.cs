@@ -10,9 +10,9 @@ public class RaycastBoatMovement : MonoBehaviour
     [Tooltip("מרחק הקרן")]
     public float rayDistance = 10f;
 
-    [Header("קוליידרים לבלימה (אופציונלי)")]
-    [Tooltip("מערך הקוליידרים שעליהם מתבצעת הבדיקה. אם המערך ריק – נתייחס לכל ההתנגשויות.")]
-    public Collider[] targetColliders;
+    [Header("אובייקטים מורשים (פריפאבים)")]
+    [Tooltip("רשימה של פריפאבים – רק אובייקטים אלו ישפיעו על התזוזה")]
+    public GameObject[] allowedPrefabs;
 
     [Header("תנועת הסירה")]
     [Tooltip("מהירות התנועה קדימה")]
@@ -27,7 +27,6 @@ public class RaycastBoatMovement : MonoBehaviour
     public float steeringReturnSpeed = 60f;
 
     // משתנה שמייצג את הזווית הנוכחית של ה-steering (במעלות)
-    // לדוגמה: -45 עד 45 כאשר 0 אומר שאין סטייה מכיוון "ישר"
     private float currentSteeringAngle = 0f;
 
     void Update()
@@ -52,30 +51,22 @@ public class RaycastBoatMovement : MonoBehaviour
             // ביצוע Raycast כולל זיהוי טריגרים
             if (Physics.Raycast(transform.position, direction, out RaycastHit hit, rayDistance, ~0, QueryTriggerInteraction.Collide))
             {
-                Debug.Log($"{gameObject.name} - קרן פוגעת באובייקט: {hit.collider.name} (isTrigger: {hit.collider.isTrigger})");
-
+                // בדיקה האם האובייקט שפגענו בו שייך לאחד מהפריפאבים המורשים
                 bool considerHit = false;
-                // אם הוגדר מערך targetColliders, נבדוק האם האובייקט מופיע בו
-                if (targetColliders != null && targetColliders.Length > 0)
+                if (allowedPrefabs != null && allowedPrefabs.Length > 0)
                 {
-                    foreach (Collider col in targetColliders)
+                    foreach (GameObject prefab in allowedPrefabs)
                     {
-                        if (hit.collider == col)
+                        // כאן מבצעים השוואה לפי שם – ודאו שהשם של מופעי הסצנה אכן מכיל את השם של הפריפאב
+                        if (hit.collider.gameObject.name.Contains(prefab.name))
                         {
                             considerHit = true;
                             break;
                         }
                     }
                 }
-                else
-                {
-                    // אם לא הוגדרו קוליידרים ספציפיים – נתייחס לכל ההתנגשויות
-                    considerHit = true;
-                }
-
-                // אם מדובר בטריגר – נתייחס אליו גם אם אינו במערך (ניתן לשנות זאת בהתאם לצורך)
-                if (hit.collider.isTrigger)
-                    considerHit = true;
+                // אם לא מוגדר מערך, לא נתייחס לאובייקט
+                // (אפשר לשנות התנהגות זו לפי הצורך)
 
                 if (considerHit && hit.distance < closestDistance)
                 {
@@ -90,38 +81,26 @@ public class RaycastBoatMovement : MonoBehaviour
         float targetSteeringAngle = 0f; // ברירת מחדל: אין סטייה (0 מעלות)
         if (hitDetected)
         {
-            // המרת נקודת הפגיעה למרחב המקומי של האובייקט (למשל, הסירה)
+            // המרת נקודת הפגיעה למרחב המקומי של הסירה
             Vector3 localHitPoint = transform.InverseTransformPoint(closestHit.point);
-            Debug.Log($"{gameObject.name} - נקודת הפגיעה המקומית: {localHitPoint}");
-
             // אם נקודת הפגיעה נמצאת מימין (x חיובי) – נסטה שמאלה (שלילית),
             // ואם משמאל – נסטה לימינה (חיובית)
             if (localHitPoint.x > 0f)
                 targetSteeringAngle = -maxSteeringAngle;
             else if (localHitPoint.x < 0f)
                 targetSteeringAngle = maxSteeringAngle;
-
-            Debug.Log($"{gameObject.name} - התנגשות זוהתה. זווית סטירינג רצויה: {targetSteeringAngle} מעלות");
         }
 
         // 3. שינוי הדרגתי של הזווית הנוכחית לכיוון הזווית הרצויה
-        // כאשר יש התנגשות – נשתמש במהירות שינוי מוגדרת,
-        // וכאשר אין – נחזור בהדרגה לזווית 0.
         if (hitDetected)
-        {
             currentSteeringAngle = Mathf.MoveTowards(currentSteeringAngle, targetSteeringAngle, steeringChangeSpeed * Time.deltaTime);
-        }
         else
-        {
             currentSteeringAngle = Mathf.MoveTowards(currentSteeringAngle, 0f, steeringReturnSpeed * Time.deltaTime);
-        }
 
-        // 4. יישום הסיבוב (התמרון) – כאן הסירה מסובבת סביב ציר ה-Y במהירות תלויה בזווית ה-steering הנוכחית.
-        // לדוגמה: אם currentSteeringAngle = 45, הסירה תסתובב ב-45 מעלות לשנייה.
+        // 4. יישום הסיבוב (התמרון)
         transform.Rotate(0, currentSteeringAngle * Time.deltaTime, 0, Space.World);
-        Debug.Log($"{gameObject.name} - סיבוב מיושם: {currentSteeringAngle * Time.deltaTime} מעלות");
 
-        // 5. תנועת הסירה קדימה – היא תמשיך לנוע כל הזמן בכיוון הפנים הנוכחי שלה.
+        // 5. תנועת הסירה קדימה
         transform.position += transform.forward * forwardSpeed * Time.deltaTime;
     }
 }

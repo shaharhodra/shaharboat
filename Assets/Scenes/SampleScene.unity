@@ -698,7 +698,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.15647033, y: 0.000000008497223, z: -0.0000000013461442, w: 0.9876827}
+  m_LocalRotation: {x: 0.15647033, y: -0.000000008497222, z: 0.0000000013461439, w: 0.9876827}
   m_LocalPosition: {x: 0, y: 3.25, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -908,7 +908,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1247500869}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.15647033, y: 0.000000008497223, z: -0.0000000013461442, w: 0.9876827}
+  m_LocalRotation: {x: 0.15647033, y: -0.000000008497222, z: 0.0000000013461439, w: 0.9876827}
   m_LocalPosition: {x: 0, y: 3.25, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1244,7 +1244,7 @@ MonoBehaviour:
   - {fileID: 1622200086973145687, guid: d505a1baae0edff43b5f134eea3cec98, type: 3}
   - {fileID: 3261865299594382580, guid: 3b7e6dd4354ca7f4b93834010ef63114, type: 3}
   - {fileID: 4545521460984330786, guid: 81d9ad1013d7c8f48acb7704f420881e, type: 3}
-  numberOfObjectsToPlace: 10
+  numberOfObjectsToPlace: 5
   maxDistanceFromPlayer: 400
   minDistanceBetweenObjects: 100
   maxDistanceFromPlayerToDisappear: 500
