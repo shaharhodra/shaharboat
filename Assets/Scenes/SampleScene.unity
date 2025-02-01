@@ -586,21 +586,15 @@ MonoBehaviour:
   nightAmbientColor: {r: 0, g: 0, b: 0, a: 1}
   dayLightIntensity: 1
   nightLightIntensity: 0.2
-  daySkybox: {fileID: 0}
-  nightSkybox: {fileID: 0}
+  daySkybox: {fileID: 2100000, guid: 16e80c3f3a02aa84dbe4c504e03ef24b, type: 2}
+  nightSkybox: {fileID: 2100000, guid: 3cfb54445f5720a4d8374b8759444b59, type: 2}
   dayLayerMask:
     serializedVersion: 2
     m_Bits: 64
   nightLayerMask:
     serializedVersion: 2
     m_Bits: 128
-  scalableLayerMask:
-    serializedVersion: 2
-    m_Bits: 0
-  dayWeather: {fileID: 0}
-  nightWeather: {fileID: 0}
-  scalableObjectSize: {x: 2, y: 2, z: 2}
-  dynamicLayerObject: {fileID: 0}
+  dynamicLayerObject: {fileID: 523586692}
   dayLayerName: day
   nightLayerName: night
 --- !u!4 &863556374
@@ -704,7 +698,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.15647033, y: -0.000000008497223, z: 0.0000000013461442, w: 0.9876827}
+  m_LocalRotation: {x: 0.15647033, y: 0.000000008497222, z: -0.0000000013461439, w: 0.9876827}
   m_LocalPosition: {x: 0, y: 3.25, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -914,7 +908,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1247500869}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.15647033, y: -0.000000008497223, z: 0.0000000013461442, w: 0.9876827}
+  m_LocalRotation: {x: 0.15647033, y: 0.000000008497222, z: -0.0000000013461439, w: 0.9876827}
   m_LocalPosition: {x: 0, y: 3.25, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
