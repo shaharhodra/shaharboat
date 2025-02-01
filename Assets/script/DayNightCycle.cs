@@ -28,8 +28,8 @@ public class DayNightCycle : MonoBehaviour
 
     private void Start()
     {
-        LoadDayNightState();
         UpdateEnvironment();
+        isDay = true;
     }
 
     private void Update()
@@ -87,22 +87,9 @@ public class DayNightCycle : MonoBehaviour
     {
         isDay = !isDay;
         UpdateEnvironment();
-        SaveDayNightState();
     }
 
-    private void SaveDayNightState()
-    {
-        PlayerPrefs.SetInt(DayNightKey, isDay ? 1 : 0);
-        PlayerPrefs.Save();
-    }
-
-    private void LoadDayNightState()
-    {
-        if (PlayerPrefs.HasKey(DayNightKey))
-        {
-            isDay = PlayerPrefs.GetInt(DayNightKey) == 1;
-        }
-    }
+  
 
     public bool IsDay()
     {

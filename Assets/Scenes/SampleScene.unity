@@ -594,7 +594,7 @@ MonoBehaviour:
   nightLayerMask:
     serializedVersion: 2
     m_Bits: 128
-  dynamicLayerObject: {fileID: 523586692}
+  dynamicLayerObject: {fileID: 1247500869}
   dayLayerName: day
   nightLayerName: night
 --- !u!4 &863556374
@@ -698,7 +698,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.15647033, y: 0.000000008497222, z: -0.0000000013461439, w: 0.9876827}
+  m_LocalRotation: {x: 0.15647033, y: 0.000000008497223, z: -0.0000000013461442, w: 0.9876827}
   m_LocalPosition: {x: 0, y: 3.25, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -752,7 +752,7 @@ GameObject:
   - component: {fileID: 967037562}
   - component: {fileID: 967037561}
   m_Layer: 6
-  m_Name: Cube
+  m_Name: day
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -790,7 +790,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -908,7 +908,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1247500869}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.15647033, y: 0.000000008497222, z: -0.0000000013461439, w: 0.9876827}
+  m_LocalRotation: {x: 0.15647033, y: 0.000000008497223, z: -0.0000000013461442, w: 0.9876827}
   m_LocalPosition: {x: 0, y: 3.25, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1113,6 +1113,84 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac0b09e7857660247b1477e93731de29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1001 &1648422751
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1903420836}
+    m_Modifications:
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6143272588101372061, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_Name
+      value: night
+      objectReference: {fileID: 0}
+    - target: {fileID: 7926331614439680073, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7926331614439680073, guid: c1a9d15f0929da74cb52613eb4153b39,
+        type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c1a9d15f0929da74cb52613eb4153b39, type: 3}
 --- !u!1 &1903420834
 GameObject:
   m_ObjectHideFlags: 0
@@ -1146,6 +1224,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 967037560}
+  - {fileID: 2068597757}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1903420837
@@ -1166,9 +1245,9 @@ MonoBehaviour:
   - {fileID: 3261865299594382580, guid: 3b7e6dd4354ca7f4b93834010ef63114, type: 3}
   - {fileID: 4545521460984330786, guid: 81d9ad1013d7c8f48acb7704f420881e, type: 3}
   numberOfObjectsToPlace: 10
-  maxDistanceFromPlayer: 100
-  minDistanceBetweenObjects: 20
-  maxDistanceFromPlayerToDisappear: 100
+  maxDistanceFromPlayer: 400
+  minDistanceBetweenObjects: 100
+  maxDistanceFromPlayerToDisappear: 500
 --- !u!114 &1903420838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1215,6 +1294,12 @@ MonoBehaviour:
   flashDuration: 0.2
   togglePenaltyTextButton: {fileID: 0}
   colliderImagePairs: []
+--- !u!4 &2068597757 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4110563679146337580, guid: c1a9d15f0929da74cb52613eb4153b39,
+    type: 3}
+  m_PrefabInstance: {fileID: 1648422751}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
