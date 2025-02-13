@@ -2,53 +2,61 @@ using UnityEngine;
 
 public class BoatController : MonoBehaviour
 {
-    [Header("הגדרות תנועה")]
-    [Tooltip("מהירות תנועה קדימה")]
+    [Header("תנועת הסירה")]
     public float forwardSpeed = 5f;
-    [Tooltip("מהירות סיבוב (מעלות לשנייה)")]
     public float turnSpeed = 50f;
-    [Tooltip("הטיית הסירה המקסימלית (במעלות)")]
     public float tiltAmount = 15f;
 
-    [Header("הגדרות גל")]
-    [Tooltip("עוצמת התנועה האנכית (בובינג)")]
+    [Header("גלים לבובינג")]
     public float waveAmplitude = 0.5f;
-    [Tooltip("תדירות הגלים")]
     public float waveFrequency = 1f;
 
-    [Header("הגדרות סוויפ")]
-    [Tooltip("רגישות הסוויפ (כפול ערך הזזת אצבע בפיקסלים)")]
+    [Header("קלט סוויפ")]
     public float swipeSensitivity = 0.05f;
+    public float steeringSmooth = 5f;
+
+    [Header("אפקט חרטום – תנועות קטנות נוספות")]
+    [Tooltip("מקדם להצטברות תנועת Yaw מהקלט (ככל שהמשתמש מזיז, הערך מצטבר)")]
+    public float extraYawMultiplier = 10f;
+    [Tooltip("קצב דעיכת תנועת ה-Yaw (כשאין מגע, הערך מתמעט לאט)")]
+    public float extraYawDecayRate = 0.5f;
+    [Tooltip("עוצמת תנודת ה-Pitch (תנועה עדינה המדמה גלים)")]
+    public float extraPitchAmplitude = 3f;
+    [Tooltip("תדירות תנודת ה-Pitch")]
+    public float extraPitchFrequency = 2f;
 
     // משתנים פנימיים
-    private float initialY;            // הגובה ההתחלתי של הסירה
-    private float currentHeading = 0f; // הזווית הנוכחית (סיבוב סביב ציר Y)
-    private float currentTilt = 0f;    // זווית ההטיה (סיבוב סביב ציר Z)
-    private float steering = 0f;       // ערך הנגזרת של תנועת הסוויפ
+    private float initialY;
+    private float currentHeading = 0f;
+    private float currentTilt = 0f;
+    private float currentSteering = 0f;
 
-    // משתנים לזיהוי סוויפ במובייל
+    // משתנה לאינרציה – מצטבר את תנועת ה-extra yaw
+    private float inertialExtraYaw = 0f;
+
+    // משתנים לטיפול בקלט מובייל
     private Vector2 touchStartPos;
     private bool isSwiping = false;
 
     void Start()
     {
-        // שמירת הגובה ההתחלתי של הסירה
         initialY = transform.position.y;
         currentHeading = transform.eulerAngles.y;
     }
 
     void Update()
     {
-        // תנועה קדימה – הסירה זזה בכיוון החזיתי שלה
+        // תנועה קדימה
         transform.Translate(Vector3.forward * forwardSpeed * Time.deltaTime);
 
-        // תנועת "בובינג" – שינוי אנכי לפי פונקציית סינוס
+        // בובינג – שינוי אנכי המדמה גלים
         float waveOffset = Mathf.Sin(Time.time * waveFrequency) * waveAmplitude;
         Vector3 pos = transform.position;
         pos.y = initialY + waveOffset;
         transform.position = pos;
 
-        // טיפול בקלט סוויפ בטלפון (או במצב Editor ניתן להוסיף גם קלט עכבר/מקלדת במידת הצורך)
+        // טיפול בקלט סוויפ
+        float targetSteering = 0f;
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
@@ -60,27 +68,45 @@ public class BoatController : MonoBehaviour
             else if (touch.phase == TouchPhase.Moved && isSwiping)
             {
                 Vector2 delta = touch.position - touchStartPos;
-                // שימוש בתנועה אופקית כדי לקבוע את ערך הסוויפ
-                steering = delta.x * swipeSensitivity;
+                targetSteering = delta.x * swipeSensitivity;
             }
             else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
             {
                 isSwiping = false;
-                steering = 0f;
+                targetSteering = 0f;
             }
         }
         else
         {
-            // במידה ואין קלט, מאפסים בהדרגה את ערך הסוויפ
-            steering = Mathf.Lerp(steering, 0, Time.deltaTime * 5f);
+            targetSteering = 0f;
         }
 
-        // עדכון כיוון הסירה (סיבוב סביב ציר Y) בהתאם לסוויפ
-        currentHeading += steering * turnSpeed * Time.deltaTime;
-        // עדכון הטיית הסירה (סיבוב סביב ציר Z) – כך שהסירה תטה לצד הפוך לכיוון הסוויפ
-        currentTilt = Mathf.Lerp(currentTilt, -steering * tiltAmount, Time.deltaTime * turnSpeed);
+        // עדכון חלקי של קלט הסוויפ – מעבר חלק
+        currentSteering = Mathf.Lerp(currentSteering, targetSteering, Time.deltaTime * steeringSmooth);
 
-        // עדכון הסיבוב הכולל של הסירה: שומר על סיבוב סביב ציר Y והטיה סביב ציר Z
-        transform.rotation = Quaternion.Euler(0, currentHeading, currentTilt);
+        // עדכון הסיבוב הבסיסי של הסירה (Heading ו-Tilt)
+        currentHeading += currentSteering * turnSpeed * Time.deltaTime;
+        currentTilt = Mathf.Lerp(currentTilt, -currentSteering * tiltAmount, Time.deltaTime * turnSpeed);
+        Quaternion baseRotation = Quaternion.Euler(0, currentHeading, currentTilt);
+
+        // עדכון האינרציה – כאשר יש קלט, מצטברים ערכי extra yaw; כשאין קלט, הערך מתמעט באיטיות
+        if (Mathf.Abs(targetSteering) > 0.001f)
+        {
+            inertialExtraYaw += currentSteering * extraYawMultiplier * Time.deltaTime;
+        }
+        else
+        {
+            inertialExtraYaw = Mathf.Lerp(inertialExtraYaw, 0, extraYawDecayRate * Time.deltaTime);
+        }
+
+        // תנודת Pitch עדינה המדמה תנועה של גלים (אפקט חרטום)
+        float extraPitch = Mathf.Sin(Time.time * extraPitchFrequency) * extraPitchAmplitude;
+
+        // שילוב הסיבובים: הסיבוב הבסיסי + extra yaw (עם אינרציה) + תנודת pitch
+        Vector3 finalEuler = baseRotation.eulerAngles;
+        finalEuler.y += inertialExtraYaw;
+        finalEuler.x += extraPitch;
+
+        transform.rotation = Quaternion.Euler(finalEuler);
     }
 }
