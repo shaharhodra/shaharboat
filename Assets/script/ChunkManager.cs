@@ -6,22 +6,22 @@ public class ChunkManager : MonoBehaviour
 {
     public Transform player;
     public int chunkSize = 50;
-    public int loadRadius = 3;
-    public int forwardLoadDistance = 5;
-    public int unloadDistance = 5;
-    public float chunkLoadDelay = 0.2f;
+    public int loadRadius = 5;            // כמה צ'אנקים נטענים סביב השחקן
+    public int forwardLoadDistance = 3;   // טעינה נוספת קדימה לפי כיוון השחקן
+    public int unloadDistance = 7;        // מרחק (בצ'אנקים) שבו צ'אנקים נשאבים
+    public float chunkLoadDelay = 0.1f;
 
     [Header("Island & Beach Settings")]
     [Tooltip("מרווח בין צ'אנקים להופעת האיים")]
     public int islandSpacing = 8;
     [Tooltip("מרווח בין צ'אנקים להופעת החופים")]
-    public int beachSpacing = 16;
+    public int beachSpacing = 4;
 
     [Header("Distance Thresholds")]
-    [Tooltip("מרחק מינימלי (בצ'אנקים) מהשחקן להופעת איים")]
-    public int minDistanceForIsland = 3;
     [Tooltip("מרחק מינימלי (בצ'אנקים) מהשחקן להופעת חופים")]
-    public int minDistanceForBeach = 5;
+    public int minDistanceForBeach = 2;
+    [Tooltip("מרחק מינימלי (בצ'אנקים) מהשחקן להופעת איים")]
+    public int minDistanceForIsland = 4;
 
     [System.Serializable]
     public class ChunkType
@@ -29,18 +29,15 @@ public class ChunkManager : MonoBehaviour
         public string name;
         public GameObject prefab;
     }
-
     public List<ChunkType> chunkPrefabs;
 
     private Dictionary<Vector2, GameObject> loadedChunks = new Dictionary<Vector2, GameObject>();
     private Queue<Vector2> chunkQueue = new Queue<Vector2>();
     private bool isLoadingChunk = false;
-    private Vector3 lastPlayerPosition;
     private Vector2 lastPlayerChunkPos;
 
     void Start()
     {
-        lastPlayerPosition = player.position;
         lastPlayerChunkPos = GetChunkCoords(player.position);
         StartCoroutine(LoadChunksGradually());
     }
@@ -56,11 +53,13 @@ public class ChunkManager : MonoBehaviour
         UnloadFarChunks();
     }
 
+    // מחשב את הקואורדינטות של הצ'אנק בהתאם למיקום בעולם
     Vector2 GetChunkCoords(Vector3 position)
     {
         return new Vector2(Mathf.Floor(position.x / chunkSize), Mathf.Floor(position.z / chunkSize));
     }
 
+    // טעינה הדרגתית של צ'אנקים מסביב לשחקן
     IEnumerator LoadChunksGradually()
     {
         isLoadingChunk = true;
@@ -74,7 +73,7 @@ public class ChunkManager : MonoBehaviour
             {
                 Vector2 chunkCoord = new Vector2(playerChunkPos.x + x, playerChunkPos.y + y);
 
-                // תמיד טעינת הצ'אנק שמתחת לשחקן כים
+                // תמיד טוענים את הצ'אנק שמעליו נמצא השחקן כבסיס – ים
                 if (chunkCoord == playerChunkPos)
                 {
                     LoadChunk(chunkCoord, "Chunk_Ocean");
@@ -82,9 +81,7 @@ public class ChunkManager : MonoBehaviour
                 }
 
                 if (!loadedChunks.ContainsKey(chunkCoord))
-                {
                     chunkQueue.Enqueue(chunkCoord);
-                }
             }
         }
 
@@ -98,6 +95,7 @@ public class ChunkManager : MonoBehaviour
         isLoadingChunk = false;
     }
 
+    // טוען צ'אנק בודד לפי קואורדינטה, ניתן להכריח סוג מסוים (למשל "Chunk_Ocean")
     void LoadChunk(Vector2 chunkCoord, string forcedType = "")
     {
         if (loadedChunks.ContainsKey(chunkCoord))
@@ -111,7 +109,7 @@ public class ChunkManager : MonoBehaviour
             Vector3 chunkPosition = new Vector3(chunkCoord.x * chunkSize, 0, chunkCoord.y * chunkSize);
             GameObject chunkInstance = Instantiate(chunkPrefab, chunkPosition, Quaternion.identity);
             loadedChunks.Add(chunkCoord, chunkInstance);
-            Debug.Log($"✅ Loaded Chunk: {chunkType} at {chunkCoord}");
+            Debug.Log($"✅ Loaded {chunkType} at {chunkCoord}");
         }
         else
         {
@@ -119,6 +117,7 @@ public class ChunkManager : MonoBehaviour
         }
     }
 
+    // מסיר צ'אנקים רחוקים מדי מהשחקן
     void UnloadFarChunks()
     {
         HashSet<Vector2> toRemove = new HashSet<Vector2>();
@@ -127,8 +126,7 @@ public class ChunkManager : MonoBehaviour
 
         foreach (var chunk in loadedChunks)
         {
-            float distanceSquared = (chunk.Key - playerChunkPos).sqrMagnitude;
-            if (distanceSquared > unloadDistanceSquared)
+            if ((chunk.Key - playerChunkPos).sqrMagnitude > unloadDistanceSquared)
             {
                 Destroy(chunk.Value);
                 toRemove.Add(chunk.Key);
@@ -141,45 +139,30 @@ public class ChunkManager : MonoBehaviour
         }
     }
 
+    // קובע את סוג הצ'אנק על פי מרחק מהשחקן ותנאים פשוטים להופעת חופים ואיים
     string DetermineChunkType(Vector2 coord)
     {
-        // חשב את מרכז הצ'אנק בעולם (לדיוק במרחק מהשחקן)
+        // חשב את מרכז הצ'אנק בעולם
         Vector3 chunkCenter = new Vector3(coord.x * chunkSize + chunkSize * 0.5f, 0, coord.y * chunkSize + chunkSize * 0.5f);
-        Vector3 toChunk = (chunkCenter - player.position).normalized;
-
-        // מחשבים את הכיוון שהשחקן פונה בציר XZ
-        Vector3 playerForwardXZ = new Vector3(player.forward.x, 0, player.forward.z).normalized;
-
-        // אם הצ'אנק מאחוריו של השחקן – תמיד יהיה ים
-        if (Vector3.Dot(toChunk, playerForwardXZ) < 0)
-        {
-            return "Chunk_Ocean";
-        }
-
         float distanceFromPlayer = Vector3.Distance(chunkCenter, player.position);
 
-        // אם הצ'אנק קרוב מדי (פחות מ־minDistanceForBeach בצ'אנקים), גם אם עומד בתנאי החוף – יהיה ים
+        // אם הצ'אנק קרוב מדי – תמיד ים
         if (distanceFromPlayer < minDistanceForBeach * chunkSize)
-        {
             return "Chunk_Ocean";
-        }
 
-        // במידה והצ'אנק רחוק מספיק, נבדוק תנאי לאיים
-        if (Mathf.Abs(coord.x) % islandSpacing == 0 && Mathf.Abs(coord.y) % islandSpacing == 0 &&
-            distanceFromPlayer >= minDistanceForIsland * chunkSize)
-        {
-            return "Chunk_Island";
-        }
-
-        // בדיקת תנאי לחוף
-        if (Mathf.Abs(coord.x) % beachSpacing == 0 && Mathf.Abs(coord.y) % beachSpacing == 0)
-        {
+        // במרחק בינוני – נציג חוף
+        if (distanceFromPlayer < minDistanceForIsland * chunkSize)
             return "Chunk_Beach";
-        }
 
+        // במרחק רחוק – אם עונה על תנאי המרווח (לפי מודולו) נציג אי
+        if (((int)Mathf.Abs(coord.x)) % islandSpacing == 0 && ((int)Mathf.Abs(coord.y)) % islandSpacing == 0)
+            return "Chunk_Island";
+
+        // במקרים אחרים – ים
         return "Chunk_Ocean";
     }
 
+    // מחפש את הפרפאב המתאים לפי שם סוג הצ'אנק
     GameObject GetChunkPrefab(string type)
     {
         foreach (var chunk in chunkPrefabs)

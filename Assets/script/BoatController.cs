@@ -47,7 +47,7 @@ public class BoatController : MonoBehaviour
     void Update()
     {
         // תנועה קדימה
-        transform.Translate(Vector3.forward * forwardSpeed * Time.deltaTime);
+         transform.Translate(Vector3.forward * forwardSpeed * Time.deltaTime);
 
         // בובינג – שינוי אנכי המדמה גלים
         float waveOffset = Mathf.Sin(Time.time * waveFrequency) * waveAmplitude;

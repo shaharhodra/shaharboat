@@ -37,6 +37,9 @@ public class RaycastHandler : MonoBehaviour
 
     [Header("UI Elements")]
     public Button togglePenaltyTextButton;
+    
+    [Header("Ship Wheel UI")]
+    public Image shipWheelImage; // אלמנט הגה הספינה
 
     [Header("Collider-Image Mapping")]
     public List<ColliderImagePair> colliderImagePairs = new List<ColliderImagePair>();
@@ -88,6 +91,17 @@ public class RaycastHandler : MonoBehaviour
     private void Update()
     {
         ThrowRays();
+        UpdateShipWheel(); // עדכון הגה הספינה
+    }
+
+    private void UpdateShipWheel()
+    {
+        if(shipWheelImage != null)
+        {
+            // נניח שסקריפט זה נמצא על האובייקט של הספינה, ולכן נשתמש ב-transform שלה.
+            float shipRotationY = transform.eulerAngles.y;
+            shipWheelImage.rectTransform.localRotation = Quaternion.Euler(0, 0, -shipRotationY);
+        }
     }
 
     private void ThrowRays()
