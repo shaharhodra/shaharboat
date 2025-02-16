@@ -20,14 +20,15 @@ public class RaycastHandler : MonoBehaviour
     public List<float> rayAngles = new List<float> { -30f, -15f, 0f, 15f, 30f };
 
     [Header("Distance Settings")]
-    public float imageDisplayDistance = 7f;    // מרחק הצגת תמונה
-    public float flashTriggerDistance = 4f;      // מרחק שבו הפלאש יופעל
+    public float imageDisplayDistance = 7f;    // מרחק להצגת התמונה
+    public float flashTriggerDistance = 4f;      // מרחק שבו מופעל פלאש
+    public float penaltyDistance = 5f;           // מרחק הפסילה – כאשר הפגיעה מתרחשת בטווח זה, נחשב לפגיעה
 
     [Header("Penalty Settings")]
     public GameObject penaltyTextPanel;
     public TextMeshProUGUI penaltyText;
     public Image penaltyBackground;
-    public float penaltyDisplayDuration = 3f;
+    public float penaltyDisplayDuration = 3f;  // משך הזמן בו מוצג רקע הפסילה (וכן התמונה)
 
     [Header("Flash Settings")]
     public Image flashImage;
@@ -37,7 +38,7 @@ public class RaycastHandler : MonoBehaviour
 
     [Header("UI Elements")]
     public Button togglePenaltyTextButton;
-    
+
     [Header("Ship Wheel UI")]
     public Image shipWheelImage; // אלמנט הגה הספינה
 
@@ -45,20 +46,29 @@ public class RaycastHandler : MonoBehaviour
     public List<ColliderImagePair> colliderImagePairs = new List<ColliderImagePair>();
     private Dictionary<string, ColliderImagePair> colliderImageMap = new Dictionary<string, ColliderImagePair>();
 
-    // במקום HashSet – נשתמש ב־Dictionary לעדכון ספירת הפגיעות לכל קוליידר.
+    // משתנה לוג לפסילות: ספירת הפגיעות לכל קוליידר
     private Dictionary<string, int> penaltyLog = new Dictionary<string, int>();
 
+    // תמונה שמוצגת ברגע זה
     private Image currentImage;
+
+    // משתנים לניהול כיבוי קוליידרים של האובייקט שזוהה
+    private GameObject lastDisabledObject = null;
+    private List<Collider> disabledColliders = new List<Collider>();
+
+    // נעילה למניעת זיהוי בזמן הפסילה (אם נדרש)
+    private bool isSystemLocked = false;
+    private float lockTimer = 0f;
 
     private void Start()
     {
-        // אתחול המיפוי
+        // אתחול המיפוי - הכנת המילון ומסתירים את התמונות בתחילה
         foreach (var pair in colliderImagePairs)
         {
             if (pair != null && pair.image != null)
             {
                 colliderImageMap[pair.colliderName] = pair;
-                pair.image.enabled = false; // התחלתית – התמונות מוסתרות
+                pair.image.enabled = false;
             }
         }
 
@@ -66,22 +76,18 @@ public class RaycastHandler : MonoBehaviour
         {
             penaltyTextPanel.SetActive(false);
         }
-
         if (penaltyText != null)
         {
             penaltyText.text = "";
         }
-
         if (togglePenaltyTextButton != null)
         {
             togglePenaltyTextButton.onClick.AddListener(TogglePenaltyPanel);
         }
-
         if (penaltyBackground != null)
         {
             penaltyBackground.enabled = false;
         }
-
         if (flashImage != null)
         {
             flashImage.enabled = false;
@@ -90,23 +96,50 @@ public class RaycastHandler : MonoBehaviour
 
     private void Update()
     {
-        ThrowRays();
-        UpdateShipWheel(); // עדכון הגה הספינה
+        // במצב נעילה (למשל, בזמן הפסילה) לא מתבצעים זיהויים חדשים
+        if (isSystemLocked)
+        {
+            lockTimer += Time.deltaTime;
+            if (lockTimer >= penaltyDisplayDuration)
+            {
+                isSystemLocked = false;
+                lockTimer = 0f;
+                // הסתרת התמונה בלבד, לא את הודעות הפסילה
+                HideCurrentImage();
+            }
+            return;
+        }
+
+        bool hitFound = ThrowRays();
+
+        // אם לא זוהה פגיעה, נסתר רק את תמונת הקוליידר
+        if (!hitFound)
+        {
+            HideCurrentImage();
+            ResetFlashEffect();
+        }
+
+        UpdateShipWheel();
     }
 
     private void UpdateShipWheel()
     {
-        if(shipWheelImage != null)
+        if (shipWheelImage != null)
         {
-            // נניח שסקריפט זה נמצא על האובייקט של הספינה, ולכן נשתמש ב-transform שלה.
             float shipRotationY = transform.eulerAngles.y;
             shipWheelImage.rectTransform.localRotation = Quaternion.Euler(0, 0, -shipRotationY);
         }
     }
 
-    private void ThrowRays()
+    /// <summary>
+    /// שולחת קרני Ray בזוויות מוגדרות ומנסה לזהות פגיעה.
+    /// מחזירה true אם זוהה אובייקט, אחרת false.
+    /// </summary>
+    private bool ThrowRays()
     {
-        bool hitSomething = false;
+        bool hitFound = false;
+        GameObject currentHitObject = null;
+        Collider currentHitCollider = null;
 
         foreach (float angle in rayAngles)
         {
@@ -118,9 +151,11 @@ public class RaycastHandler : MonoBehaviour
 
             if (Physics.Raycast(ray, out hit, maxRayDistance, layerMask))
             {
-                hitSomething = true;
+                hitFound = true;
+                currentHitObject = hit.collider.gameObject;
+                currentHitCollider = hit.collider;
 
-                // נבדוק את ההיררכיה של האובייקט שנפגע וננקה את השם מתוספת "(Clone)"
+                // ניקוי שם האובייקט (הסרת "(Clone)") וחיפוש התאמה במיפוי
                 Transform currentTransform = hit.collider.transform;
                 string hitName = null;
                 while (currentTransform != null)
@@ -133,8 +168,6 @@ public class RaycastHandler : MonoBehaviour
                     }
                     currentTransform = currentTransform.parent;
                 }
-
-                // אם לא נמצא בהתבוננות כלפי מעלה, נבדוק גם בין הילדים
                 if (string.IsNullOrEmpty(hitName))
                 {
                     hitName = FindMatchingInChildren(hit.collider.transform);
@@ -144,7 +177,7 @@ public class RaycastHandler : MonoBehaviour
 
                 if (!string.IsNullOrEmpty(hitName))
                 {
-                    // הצגת תמונה לפי מרחק
+                    // הצגת תמונה כאשר המרחק קטן מ-imageDisplayDistance
                     if (hitDistance <= imageDisplayDistance)
                     {
                         ShowImage(hitName);
@@ -154,7 +187,7 @@ public class RaycastHandler : MonoBehaviour
                         HideCurrentImage();
                     }
 
-                    // הפעלת פלאש אם קרוב מספיק והרשאה קיימת
+                    // הפעלת פלאש כאשר המרחק קטן מ-flashTriggerDistance והרשות קיימת
                     if (hitDistance <= flashTriggerDistance && colliderImageMap[hitName].enableFlash)
                     {
                         if (!isFlashing)
@@ -163,25 +196,68 @@ public class RaycastHandler : MonoBehaviour
                         }
                     }
 
-                    // טיפול בפסילה – בכל פעם שהמרחק עומד בתנאי, נעדכן את הלוג
-                    if (hitDistance <= penaltyDisplayDuration)
+                    // טיפול בפסילה כאשר המרחק קטן מ-penaltyDistance
+                    if (hitDistance <= penaltyDistance)
                     {
                         HandlePenalty(hitName);
+                        isSystemLocked = true;
+                        lockTimer = 0f;
                     }
                 }
 
-                return; // עוצרים את הלולאה לאחר שמצאנו אובייקט
+                // ניהול כיבוי קוליידרים במידה והאובייקט שזוהה שונה מהקודם
+                if (currentHitObject != null)
+                {
+                    if (lastDisabledObject != currentHitObject)
+                    {
+                        if (lastDisabledObject != null)
+                        {
+                            foreach (var col in disabledColliders)
+                            {
+                                if (col != null)
+                                {
+                                    col.enabled = true;
+                                }
+                            }
+                            disabledColliders.Clear();
+                        }
+                        Collider[] cols = currentHitObject.GetComponentsInChildren<Collider>();
+                        foreach (var col in cols)
+                        {
+                            if (col != currentHitCollider)
+                            {
+                                col.enabled = false;
+                                disabledColliders.Add(col);
+                            }
+                        }
+                        lastDisabledObject = currentHitObject;
+                    }
+                }
+                else
+                {
+                    if (lastDisabledObject != null)
+                    {
+                        foreach (var col in disabledColliders)
+                        {
+                            if (col != null)
+                            {
+                                col.enabled = true;
+                            }
+                        }
+                        disabledColliders.Clear();
+                        lastDisabledObject = null;
+                    }
+                    HideCurrentImage();
+                    ResetFlashEffect();
+                }
+
+                break; // עוצרים את הלולאה לאחר גילוי האובייקט הראשון
             }
         }
-
-        if (!hitSomething)
-        {
-            ResetFlashEffect();
-            HideCurrentImage();
-        }
+        return hitFound;
     }
 
-    // פונקציה רקורסיבית לחיפוש התאמה גם באובייקטי הילדים
+    // פונקציה רקורסיבית לחיפוש התאמה באובייקטי הילדים
     private string FindMatchingInChildren(Transform parent)
     {
         foreach (Transform child in parent)
@@ -203,11 +279,11 @@ public class RaycastHandler : MonoBehaviour
 
     private void ShowImage(string colliderName)
     {
+        // אם יש תמונה מוצגת כבר, מסתירים אותה
         if (currentImage != null)
         {
             currentImage.enabled = false;
         }
-
         if (colliderImageMap.ContainsKey(colliderName) && colliderImageMap[colliderName].image != null)
         {
             currentImage = colliderImageMap[colliderName].image;
@@ -230,7 +306,6 @@ public class RaycastHandler : MonoBehaviour
         {
             yield break;
         }
-
         isFlashing = true;
         for (int i = 0; i < flashRepetitions; i++)
         {
@@ -243,13 +318,10 @@ public class RaycastHandler : MonoBehaviour
     }
 
     /// <summary>
-    /// כל פעם שמתרחשת פסילה – מעדכנים את הלוג כך שמספר הפגיעות של כל קוליידר מתעדכן,
-    /// ומעדכנים את טקסט ה־UI בהתאם.
+    /// מעדכן את הלוג ומציג את הודעת הפסילה עבור הקוליידר שנפגע.
     /// </summary>
-    /// <param name="colliderName">שם האובייקט שבו התרחש הפגיעה</param>
     private void HandlePenalty(string colliderName)
     {
-        // עדכון הלוג – אם האובייקט כבר קיים, מגדילים את הספירה, אחרת מוסיפים אותו עם ערך התחלתי 1
         if (penaltyLog.ContainsKey(colliderName))
         {
             penaltyLog[colliderName]++;
@@ -258,10 +330,7 @@ public class RaycastHandler : MonoBehaviour
         {
             penaltyLog[colliderName] = 1;
         }
-
-        // הפעלת אנימציית רקע הפסילה (ניתן להתאמה אישית)
         StartCoroutine(ShowPenaltyBackground());
-        // עדכון הטקסט ב־UI כך שיציג את מספר הפגיעות לכל קוליידר
         UpdatePenaltyText();
     }
 
@@ -275,9 +344,6 @@ public class RaycastHandler : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// מעדכן את טקסט הפסילה ב־UI כך שיציג את הלוג המצטבר
-    /// </summary>
     private void UpdatePenaltyText()
     {
         if (penaltyText != null && penaltyTextPanel.activeSelf)
@@ -297,7 +363,6 @@ public class RaycastHandler : MonoBehaviour
         {
             bool isActive = !penaltyTextPanel.activeSelf;
             penaltyTextPanel.SetActive(isActive);
-
             if (!isActive && penaltyText != null)
             {
                 penaltyText.text = "";
