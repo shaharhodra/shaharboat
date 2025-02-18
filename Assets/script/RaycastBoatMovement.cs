@@ -51,6 +51,11 @@ public class RaycastBoatMovement : MonoBehaviour
             // ביצוע Raycast כולל זיהוי טריגרים
             if (Physics.Raycast(transform.position, direction, out RaycastHit hit, rayDistance, ~0, QueryTriggerInteraction.Collide))
             {
+             
+                    Debug.Log("קרן פגעה באובייקט: " + hit.collider.gameObject.name);
+                    // המשך הקוד...
+                
+
                 // בדיקה האם האובייקט שפגענו בו שייך לאחד מהפריפאבים המורשים
                 bool considerHit = false;
                 if (allowedPrefabs != null && allowedPrefabs.Length > 0)

@@ -26,7 +26,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _Diffuse:
         m_Texture: {fileID: 2800000, guid: 1a69b89eb359f4841af0c0a5c008868f, type: 3}
-        m_Scale: {x: 100, y: 100}
+        m_Scale: {x: 20, y: 20}
         m_Offset: {x: 0, y: 0}
     - _Normal:
         m_Texture: {fileID: 2800000, guid: 59327b7e708cb3842a800715d8714e02, type: 3}
