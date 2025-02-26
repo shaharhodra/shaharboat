@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4301402349576892}
   m_LocalRotation: {x: 0.000000021855694, y: 0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -12.94}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -115,7 +115,7 @@ MonoBehaviour:
   angleSpread: 30
   rayDistance: 300
   allowedPrefabs:
-  - {fileID: 8172451192066404991, guid: 5d336247cb8b6cc4a9e01a5733bcc6ea, type: 3}
+  - {fileID: 7628750609386698698, guid: 30cdd06e601d62144b99cb47b376cdb5, type: 3}
   forwardSpeed: 5
   maxSteeringAngle: 45
   steeringChangeSpeed: 90

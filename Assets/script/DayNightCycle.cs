@@ -1,5 +1,13 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
+
+public enum EnvironmentState
+{
+    Day,
+    Night,
+    Special
+}
 
 public class DayNightCycle : MonoBehaviour
 {
@@ -7,56 +15,69 @@ public class DayNightCycle : MonoBehaviour
     [SerializeField] private Light directionalLight;
     [SerializeField] private Color dayAmbientColor = Color.white;
     [SerializeField] private Color nightAmbientColor = Color.black;
+    [SerializeField] private Color specialAmbientColor = Color.gray; // צבע מיוחד למצב המיוחד
     [SerializeField] private float dayLightIntensity = 1f;
     [SerializeField] private float nightLightIntensity = 0.2f;
+    [SerializeField] private float specialLightIntensity = 0.5f; // עוצמת אור למצב המיוחד
 
     [Header("Skybox Settings")]
     [SerializeField] private Material daySkybox;
     [SerializeField] private Material nightSkybox;
+    [SerializeField] private Material specialSkybox;
 
     [Header("Layers")]
-    [SerializeField] private LayerMask dayLayerMask;        // שכבות שנראות ביום
-    [SerializeField] private LayerMask nightLayerMask;      // שכבות שנראות בלילה
+    [SerializeField] private LayerMask dayLayerMask;
+    [SerializeField] private LayerMask nightLayerMask;
+    [SerializeField] private LayerMask specialLayerMask;
 
     [Header("Dynamic Layer Object")]
-    [SerializeField] private GameObject dynamicLayerObject; // אובייקט שמשנה שכבה ביום ובלילה
-    [SerializeField] private string dayLayerName = "Default";  // שם שכבת היום
-    [SerializeField] private string nightLayerName = "NightOnlyLayer"; // שם שכבת הלילה
+    [SerializeField] private GameObject dynamicLayerObject;
+    [SerializeField] private string dayLayerName = "Default";
+    [SerializeField] private string nightLayerName = "NightOnlyLayer";
+    [SerializeField] private string specialLayerName = "SpecialLayer";
 
-    private bool isDay = true;
-    private const string DayNightKey = "DayNightState";
+    private EnvironmentState currentState = EnvironmentState.Day;
 
     private void Start()
     {
         UpdateEnvironment();
-        isDay = true;
     }
 
     private void Update()
     {
-        // כל הזמן מעדכנים את שכבות הרינדור
-        UpdateEnvironment();
+        // אם אין צורך בעדכון בכל פריים, אפשר להסיר את הקריאה מה-Update
+        // UpdateEnvironment();
     }
 
     private void UpdateEnvironment()
     {
-        if (directionalLight == null || daySkybox == null || nightSkybox == null)
+        if (directionalLight == null || daySkybox == null || nightSkybox == null || specialSkybox == null)
         {
             Debug.LogError("One or more required components are not assigned in the Inspector!");
             return;
         }
 
-        // עדכון Skybox וצבע האור האמביינט
-        RenderSettings.skybox = isDay ? daySkybox : nightSkybox;
-        RenderSettings.ambientLight = isDay ? dayAmbientColor : nightAmbientColor;
+        // עדכון ה-Skybox, צבע האור והעוצמה בהתאם למצב הנוכחי
+        switch (currentState)
+        {
+            case EnvironmentState.Day:
+                RenderSettings.skybox = daySkybox;
+                RenderSettings.ambientLight = dayAmbientColor;
+                directionalLight.intensity = dayLightIntensity;
+                break;
+            case EnvironmentState.Night:
+                RenderSettings.skybox = nightSkybox;
+                RenderSettings.ambientLight = nightAmbientColor;
+                directionalLight.intensity = nightLightIntensity;
+                break;
+            case EnvironmentState.Special:
+                RenderSettings.skybox = specialSkybox;
+                RenderSettings.ambientLight = specialAmbientColor;
+                directionalLight.intensity = specialLightIntensity;
+                break;
+        }
 
-        // עדכון עוצמת התאורה - אם אתה לא רוצה לשנות את עוצמת התאורה, תוכל להפסיק את זה
-        directionalLight.intensity = isDay ? dayLightIntensity : nightLightIntensity;
-
-        // עדכון מסיכת ה-Culling של המצלמה
         UpdateCameraCullingMask();
-
-        // עדכון שכבת האובייקט הדינמי
         UpdateDynamicLayerObject();
     }
 
@@ -64,8 +85,21 @@ public class DayNightCycle : MonoBehaviour
     {
         if (Camera.main != null)
         {
-            Camera.main.cullingMask = isDay ? dayLayerMask : nightLayerMask;
-            Debug.Log(isDay ? "Day Mode: Showing DayLayerMask" : "Night Mode: Showing NightLayerMask");
+            switch (currentState)
+            {
+                case EnvironmentState.Day:
+                    Camera.main.cullingMask = dayLayerMask;
+                    Debug.Log("Day Mode: Showing DayLayerMask");
+                    break;
+                case EnvironmentState.Night:
+                    Camera.main.cullingMask = nightLayerMask;
+                    Debug.Log("Night Mode: Showing NightLayerMask");
+                    break;
+                case EnvironmentState.Special:
+                    Camera.main.cullingMask = specialLayerMask;
+                    Debug.Log("Special Mode: Showing SpecialLayerMask");
+                    break;
+            }
         }
         else
         {
@@ -77,22 +111,45 @@ public class DayNightCycle : MonoBehaviour
     {
         if (dynamicLayerObject != null)
         {
-            string targetLayerName = isDay ? dayLayerName : nightLayerName;
+            string targetLayerName = "";
+            switch (currentState)
+            {
+                case EnvironmentState.Day:
+                    targetLayerName = dayLayerName;
+                    break;
+                case EnvironmentState.Night:
+                    targetLayerName = nightLayerName;
+                    break;
+                case EnvironmentState.Special:
+                    targetLayerName = specialLayerName;
+                    break;
+            }
             dynamicLayerObject.layer = LayerMask.NameToLayer(targetLayerName);
             Debug.Log($"Dynamic Layer Object set to: {targetLayerName}");
         }
     }
 
+    // מעבר בין מצב יום ולילה
     public void ToggleDayNight()
     {
-        isDay = !isDay;
+        if (currentState == EnvironmentState.Special || currentState == EnvironmentState.Night)
+            currentState = EnvironmentState.Day;
+        else if (currentState == EnvironmentState.Day)
+            currentState = EnvironmentState.Night;
+
         UpdateEnvironment();
     }
 
-  
+
+    // כפתור לעבור למצב המיוחד
+    public void SwitchToSpecialMode()
+    {
+        currentState = EnvironmentState.Special;
+        UpdateEnvironment();
+    }
 
     public bool IsDay()
     {
-        return isDay;
+        return currentState == EnvironmentState.Day;
     }
 }
