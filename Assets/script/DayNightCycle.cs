@@ -89,15 +89,15 @@ public class DayNightCycle : MonoBehaviour
             {
                 case EnvironmentState.Day:
                     Camera.main.cullingMask = dayLayerMask;
-                    Debug.Log("Day Mode: Showing DayLayerMask");
+                    Debug.Log("מצב יום: הצגת DayLayerMask");
                     break;
                 case EnvironmentState.Night:
                     Camera.main.cullingMask = nightLayerMask;
-                    Debug.Log("Night Mode: Showing NightLayerMask");
+                    Debug.Log("מצב לילה: הצגת NightLayerMask");
                     break;
                 case EnvironmentState.Special:
                     Camera.main.cullingMask = specialLayerMask;
-                    Debug.Log("Special Mode: Showing SpecialLayerMask");
+                    Debug.Log("מצב מיוחד: הצגת SpecialLayerMask");
                     break;
             }
         }
@@ -132,14 +132,15 @@ public class DayNightCycle : MonoBehaviour
     // מעבר בין מצב יום ולילה
     public void ToggleDayNight()
     {
+        // במידה והמצב הנוכחי הוא מצב מיוחד או לילה, מעבר חזרה למצב יום
         if (currentState == EnvironmentState.Special || currentState == EnvironmentState.Night)
             currentState = EnvironmentState.Day;
+        // אם המצב הוא יום, מעבר למצב לילה
         else if (currentState == EnvironmentState.Day)
             currentState = EnvironmentState.Night;
 
         UpdateEnvironment();
     }
-
 
     // כפתור לעבור למצב המיוחד
     public void SwitchToSpecialMode()
